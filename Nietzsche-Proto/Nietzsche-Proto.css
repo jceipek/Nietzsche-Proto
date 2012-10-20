@@ -1,1 +1,20 @@
 /* CSS declarations go here */
+
+html {
+  background-color: red;  // For testing only
+}
+
+h1 {
+  font-size: 2em;
+  line-height: 1em;  
+}
+
+h2 {
+  font-size: 1em;
+  line-height: 1em;  
+}
+
+hgroup {
+  margin: 1em;
+  background-color: green;  // For testing only
+}

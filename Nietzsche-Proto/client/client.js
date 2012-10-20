@@ -1,5 +1,11 @@
 if (Meteor.isClient) {
 
+  // Session Variables:
+  //
+  // task: keeps track of what the user is doing (searching, comparison, or looking at directions)
+  //
+
+  // Lets the templating system determine which templates to display
   Template.main.task = function (task) {
     return Session.get("task") === task;
   };
@@ -14,11 +20,55 @@ if (Meteor.isClient) {
     */
   });
 
+
+  var drawRouteLine = function (ctx, xStart, xEnd, yMid, thickness, startRounded, endRounded) {
+    /* For a given canvas context ctx,
+     * draw a rounded route line from xStart to xEnd, centered on yMid with a given thickness.
+     * Round the beginning of the line if startRounded is true.
+     * Round the end of the line if endRounded is true.
+    */
+    ctx.beginPath();
+    var radius = thickness/2;
+    if (startRounded) {
+      ctx.arc(xStart+radius, yMid, radius, Math.PI/2, -Math.PI/2, false);
+    } else {
+      ctx.moveTo(xStart, yMid+radius);
+      ctx.lineTo(xStart, yMid-radius);
+    }
+    if (endRounded) {
+      ctx.arc(xEnd-radius,yMid,radius,-Math.PI/2,Math.PI/2,false);
+    } else {
+      ctx.lineTo(xEnd,yMid-radius);
+    }
+    ctx.lineTo(xEnd,yMid+radius);
+    ctx.fill();
+  }
+
+  // Fired whenever the DOM is ready for the routeComparison template
+  Template.routeComparison.rendered = function() {
+      if(!this._rendered) {
+        var canvas = $('#graphical-comparison')[0];
+        canvas.width = document.width;
+        canvas.height = document.height;
+        if (canvas.getContext) {
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = "rgb(200,0,0)";
+          drawRouteLine(ctx, 20, 200, 50, 10, true, true)
+          ctx.fill();
+        } else {
+          // TODO: Fallback mechanism
+          console.log("canvas isn't supported");
+        }
+        this._rendered = true;
+        console.log('Template onLoad');
+      }
+  }
+
   // When the application starts
   Meteor.startup(function () {
     // "task" will keep track of what the user is doing
-    Session.set("task", "route-searching"); // Choosing From and To initially
-    //Session.set("task", "route-comparison"); // Choosing between routes graphically
+    //Session.set("task", "route-searching"); // Choosing From and To initially
+    Session.set("task", "route-comparison"); // Choosing between routes graphically
     //Session.set("task", "route-directions"); // How to use the route
   });
 }
