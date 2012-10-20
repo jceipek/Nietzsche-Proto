@@ -19,3 +19,10 @@ Implementation Strategy
 2. Make it work for arbitrary routes
 
 3. Present directions for route
+
+
+TODO
+-----
+
+
+At end, remove _autopublish_ and _insecure_
