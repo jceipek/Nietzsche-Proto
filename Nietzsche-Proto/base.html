@@ -1,0 +1,27 @@
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="description"
+    content="Humanizing Public Transportation">
+  <title>Nietzsche Transit</title>
+</head>
+
+<body>
+  <hgroup>
+    <h1>Nietzsche Transit</h1>
+    <h2>Humanizing Public Transportation</h2>
+  </hgroup>
+  {{> main}}
+</body>
+
+<template name="main">
+  {{#if task "route-searching"}}
+    {{> routeSearching}}
+  {{/if}}
+  {{#if task "route-comparison"}}
+    {{> routeComparison}}
+  {{/if}}
+  {{#if task "route-directions"}}
+    {{> routeDirections}}
+  {{/if}}
+</template>
