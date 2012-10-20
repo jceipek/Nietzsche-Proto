@@ -20,7 +20,7 @@ if (Meteor.isClient) {
     */
   });
 
-
+// START DRAWING FUNCTIONS //
   var drawRouteLine = function (ctx, xStart, xEnd, yMid, thickness, startRounded, endRounded) {
     /* For a given canvas context ctx,
      * draw a rounded route line from xStart to xEnd, centered on yMid with a given thickness.
@@ -36,33 +36,82 @@ if (Meteor.isClient) {
       ctx.lineTo(xStart, yMid-radius);
     }
     if (endRounded) {
-      ctx.arc(xEnd-radius,yMid,radius,-Math.PI/2,Math.PI/2,false);
+      ctx.arc(xEnd-radius, yMid, radius, -Math.PI/2, Math.PI/2, false);
     } else {
-      ctx.lineTo(xEnd,yMid-radius);
+      ctx.lineTo(xEnd, yMid-radius);
     }
-    ctx.lineTo(xEnd,yMid+radius);
+    ctx.lineTo(xEnd, yMid+radius);
     ctx.fill();
+  };
+
+  var plotSingleRoute = function (route, yMid) {
+    var canvas = $('#graphical-comparison')[0];
+    if (canvas.getContext) {
+      var ctx = canvas.getContext('2d');
+
+      var scaleFactor = .4;
+      var currOffset = 10;
+      var steps = route.legs[0].steps;
+      for (var stepIdx = 0; stepIdx < steps.length; stepIdx++) {
+          if (steps[stepIdx].travel_mode === "TRANSIT") {
+            ctx.fillStyle = steps[stepIdx].transit.line.color;
+          } else {
+            ctx.fillStyle = "rgb(0,0,0)"; 
+          }
+          var firstRounded = (stepIdx === 0);
+          var lastRounded = (stepIdx === steps.length-1);
+          var stepLength = steps[stepIdx].duration.value * scaleFactor;
+          drawRouteLine(ctx, currOffset, currOffset+stepLength, yMid, 10, firstRounded, lastRounded);
+          currOffset += stepLength + 10;
+      }
+    }
+  }
+// END DRAWING FUNCTIONS //
+
+  var initializeComparisonCanvas = function () {
+    var canvas = $('#graphical-comparison')[0];
+    canvas.width = document.width;
+    canvas.height = document.height;
+    if (canvas.getContext) {
+      var ctx = canvas.getContext('2d');
+    } else {
+      // TODO: Fallback mechanism
+      console.log("canvas isn't supported");
+    }
+ 
+  };
+
+  var findRoutes = function () {
+    var router = new google.maps.DirectionsService();
+    // TODO: Currently hardcoded! Make it not so.
+    var request = {
+      origin: "Hoboken NJ",
+      destination: "Carroll Gardens, Brooklyn",
+      travelMode: google.maps.TravelMode.TRANSIT,
+      transitOptions: {
+        departureTime: new Date()
+      },
+      unitSystem: google.maps.UnitSystem.IMPERIAL
+    };
+    router.route(request, function (response, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        console.log(response);
+        if (response.routes.length > 0) {
+          plotSingleRoute(response.routes[0], 20);
+        }
+      }  
+    });
   }
 
   // Fired whenever the DOM is ready for the routeComparison template
   Template.routeComparison.rendered = function() {
       if(!this._rendered) {
-        var canvas = $('#graphical-comparison')[0];
-        canvas.width = document.width;
-        canvas.height = document.height;
-        if (canvas.getContext) {
-          var ctx = canvas.getContext('2d');
-          ctx.fillStyle = "rgb(200,0,0)";
-          drawRouteLine(ctx, 20, 200, 50, 10, true, true)
-          ctx.fill();
-        } else {
-          // TODO: Fallback mechanism
-          console.log("canvas isn't supported");
-        }
+        initializeComparisonCanvas();
+        findRoutes();
         this._rendered = true;
         console.log('Template onLoad');
       }
-  }
+  };
 
   // When the application starts
   Meteor.startup(function () {

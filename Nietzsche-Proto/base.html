@@ -4,17 +4,22 @@
     name="description"
     content="Humanizing Public Transportation">
   <title>Nietzsche Transit</title>
+  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCdFMBTPdx7GCxsnYlUUtCnhdu-LW53HM8&sensor=false"></script>
+  <!-- TODO: Set sensor to true -->
 </head>
 
 <body>
-  <hgroup>
-    <h1>Nietzsche Transit</h1>
-    <h2>Humanizing Public Transportation</h2>
-  </hgroup>
-  {{> main}}
+  <div id='container'>
+    <hgroup>
+      <h1>Nietzsche Transit</h1>
+      <h2>Humanizing Public Transportation</h2>
+    </hgroup>
+    {{> main}}
+  </div>
 </body>
 
 <template name="main">
+  {{> locationSpecifier}}
   {{#if task "route-searching"}}
     {{> routeSearching}}
   {{/if}}
