@@ -48,8 +48,8 @@ Required for minimum deliverable - M
    + Add an autocomplete list
    + Clicking on an item in the list switches to comparison view
    + Remove the GO button
-3. Present directions for route
-   + List of directions using Google Maps API (M)
+3. Present directions for route (Important for HFID prototype by Thursday)
+   + List of directions using Google Maps API
    + Map overview
    + List structured so that directions show only relevant information based on step type
    + Current location indicator based on time and GPS

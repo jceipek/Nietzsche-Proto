@@ -93,14 +93,16 @@ if (Meteor.isClient) {
 // START DRAWING FUNCTIONS //
   // Draw a walking icon at the specified location
   var drawWalkingIcon = function (x, y) {
-    // TODO: Make this an actual walking icon
-    var ctx = Comparison.ctx;
+    drawMapsProvidedIcon('https://maps.gstatic.com/mapfiles/transit/iw/7/walk.png', x, y);
+
+    // TODO: Make this work so that it isn't a low-res image.
+    /*var ctx = Comparison.ctx;
     var radius = 10;
     ctx.beginPath();
     ctx.rect(x-radius, y-radius, radius*2, radius*2);
     ctx.fill();
     ctx.beginPath();
-    ctx.fill();
+    ctx.fill();*/
   };
 
   // Draw a bus icon at the specified location
@@ -139,6 +141,17 @@ if (Meteor.isClient) {
     ctx.rect(x-thickness/2, y-innerRadius*0.7, thickness, innerRadius*1.7);
     ctx.fill();
     ctx.lineWidth = oldThickness;
+  };
+
+  // Draw the Google Maps-provided icon for a step.
+  var drawMapsProvidedIcon = function (iconUrl, x, y) {
+    var image = new Image();
+    image.onload = function () {
+      // Google maps icons we're using are 15x15 px
+      Comparison.ctx.drawImage(image, x-15/2, y-15/2);
+    };
+
+    image.src = iconUrl;
   };
 
   /* For a given canvas context ctx,
@@ -188,17 +201,23 @@ if (Meteor.isClient) {
         stepEnd = posFromTime(stepEnd);
 
         drawRouteLine(ctx, stepStart, stepEnd, yMid, 10, firstRounded, lastRounded);
+        var iconLoc = {
+          x: (stepStart + stepEnd)/2,
+          y: yMid+20
+        };
         if (steps[stepIdx].travel_mode === "TRANSIT") {
           var vehicleType = steps[stepIdx].transit.line.vehicle.type;
           if (vehicleType === "SUBWAY" || vehicleType === "TRAM") {
               // At least in Boston, I can't tell the difference between "trams" and subways
               // (the Green Line is a 'TRAM' but the Red Line is a 'SUBWAY'. That's odd)
-            drawTIcon((stepStart + stepEnd)/2, yMid+20);
+            drawTIcon(iconLoc.x, iconLoc.y);
           } else if (vehicleType === "BUS") {
-            drawBusIcon((stepStart + stepEnd)/2, yMid+20);
+            //drawMapsProvidedIcon(steps[stepIdx].transit.line.vehicle.icon, iconLoc.x, iconLoc.y); // Too Big
+            drawMapsProvidedIcon("https://maps.gstatic.com/mapfiles/transit/iw/7/bus.png", iconLoc.x, iconLoc.y);
+            //drawBusIcon(iconLoc.x, iconLoc.y);
           }
         } else if (steps[stepIdx].travel_mode === "WALKING") {
-          drawWalkingIcon((stepStart + stepEnd)/2, yMid+20);
+          drawWalkingIcon(iconLoc.x, iconLoc.y);
         }
         timeOffset.setSeconds(timeOffset.getSeconds()+steps[stepIdx].duration.value);
     }
@@ -288,7 +307,7 @@ if (Meteor.isClient) {
     };
     router.route(request, function (response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
-        //console.log(response);
+        console.log(response);
 
         // TODO: Check if result already exists in mongo. If not, get the data.
         var document = {
