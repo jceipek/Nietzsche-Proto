@@ -1,7 +1,7 @@
 /* CSS declarations go here */
 
 html {
-  background-color: red;  // For testing only
+  //background-color: red;  // For testing only
 }
 
 h1 {
@@ -15,12 +15,17 @@ h2 {
 }
 
 hgroup {
-  background-color: green;  // For testing only
+  //background-color: green;  // For testing only
 }
 
 #container {
   margin: 1em;
 }
+
+#from-field, #to-field {
+  margin-left: 3em;
+}
+
 
 .time {
   position: absolute;
