@@ -4,7 +4,7 @@ if (Meteor.isClient) {
   //
   // task // keeps track of what the user is doing (searching, comparison, or looking at directions)
 
-  // Global Objects:
+  // Start Global Objects //
   var Comparison = {
     ctx: null, // The graphical comparison canvas
     initialTime: null, // Departure time
@@ -12,6 +12,7 @@ if (Meteor.isClient) {
     width: document.width, // Width of the canvas. Starts at width of window.
     height: document.height // Width of the canvas. Starts at width of window.
   };
+  // End Global Objects //
 
   // Lets the templating system determine which templates to display
   Template.main.task = function (task) {
