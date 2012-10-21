@@ -59,10 +59,8 @@ if (Meteor.isClient) {
   };
 
   // Create a new div holding a time in the "3:00 PM" format at a specified x,y location
-  var addTime = function (time, x, y) {
+  /*var addTime = function (time, x, y) {
     // XXX: TODO: Malke this reactive
-    //
-    /*
     e = document.createElement('div');
     $(e).html(formatTime(time));
     $(e).attr({
@@ -73,8 +71,17 @@ if (Meteor.isClient) {
       top: y
     });
     $('canvas').after(e);
-    */
+  };*/
+
+  // Write time in the "3:00 PM" format at a specified x,y location on the canvas
+  // XXX: Using this version for time reasons (resize is hard to deal with effectively)
+  var addTime = function (time, x, y) {
+    var ctx = Comparison.ctx;
+    ctx.font = "12px sans-serif";
+    ctx.fillText(formatTime(time), x, y);
   };
+
+
 
 // START DRAWING FUNCTIONS //
   // Draw a walking icon at the specified location
@@ -196,9 +203,12 @@ if (Meteor.isClient) {
       var startY = 0;
       ctx.beginPath();
       if ((currIntervalTime.getMinutes() % 10) === 0) {
-        addTime(currIntervalTime, 
+        /*addTime(currIntervalTime, 
                 currIntervalPos+$('#graphical-comparison')[0].offsetLeft+4, 
-                $('#graphical-comparison')[0].offsetTop);
+                $('#graphical-comparison')[0].offsetTop);*/ // The div version
+        addTime(currIntervalTime, 
+                currIntervalPos+4, 
+                15); // The canvas version
         ctx.strokeStyle = "rgb(0, 0, 0)";
       } else if ((currIntervalTime.getMinutes() % 5) === 0) {
         ctx.strokeStyle = "rgb(200, 200, 200)";
