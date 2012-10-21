@@ -5,7 +5,7 @@ Choosing a route to use can be challenging. What if you could do it graphically?
 
 Demo
 ----
-Coming soon.
+http://nietzsche-proto.meteor.com/
 
 Running Locally
 ---------------
@@ -54,10 +54,10 @@ Required for minimum deliverable - M
    + List structured so that directions show only relevant information based on step type
    + Current location indicator based on time and GPS
 
-NOTES
-------
+At end of actual development
+----------------------------
 
-At end, remove _insecure_
+At end, remove _insecure_ and _autopublish_
 
 
 
