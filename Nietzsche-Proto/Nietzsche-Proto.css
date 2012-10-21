@@ -1,9 +1,5 @@
 /* CSS declarations go here */
 
-html {
-  //background-color: red;  // For testing only
-}
-
 h1 {
   font-size: 2em;
   line-height: 1em;  
@@ -12,10 +8,6 @@ h1 {
 h2 {
   font-size: 1em;
   line-height: 1em;  
-}
-
-hgroup {
-  //background-color: green;  // For testing only
 }
 
 #container {

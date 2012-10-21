@@ -5,18 +5,12 @@ if (Meteor.isClient) {
   // task // keeps track of what the user is doing (searching, comparison, or looking at directions)
 
   // Global Objects:
-  // comparison :
-  //  {
-  //    ctx
-  //    initialTime
-  //  }
-
   var Comparison = {
-    ctx: null,
-    initialTime: null,
-    scalingFactor: 0.2,
-    width: document.width,
-    height: document.height
+    ctx: null, // The graphical comparison canvas
+    initialTime: null, // Departure time
+    scalingFactor: 0.2, // How many seconds one pixel on the canvas represents
+    width: document.width, // Width of the canvas. Starts at width of window.
+    height: document.height // Width of the canvas. Starts at width of window.
   };
 
   // Lets the templating system determine which templates to display
@@ -34,11 +28,13 @@ if (Meteor.isClient) {
     */
   });
 
+  // Given a time, what is the x position on the canvas that corresponds to it?
   var posFromTime = function (time) {
     // Convert to seconds and scale by scalingFactor
     return (time - Comparison.initialTime)/1000 * Comparison.scalingFactor;
   };
 
+  // Given a Date object, returns a string in a standard format such as "3:00 PM"
   var formatTime = function (time) {
     var amPM = 'AM';
     if (hours >= 12) {
@@ -55,7 +51,9 @@ if (Meteor.isClient) {
     return hours+':'+minutes+' '+amPM;
   };
 
+  // Create a new div holding a time in the "3:00 PM" format at a specified x,y location
   var addTime = function (time, x, y) {
+    // TODO: Malke this reactive
     e = document.createElement('div');
     $(e).html(formatTime(time));
     $(e).attr({
@@ -69,7 +67,8 @@ if (Meteor.isClient) {
   };
 
 // START DRAWING FUNCTIONS //
-
+  
+  // Draw a walking icon at the specified location
   var drawWalkingIcon = function (x, y) {
     // TODO: Make this an actual walking icon
     var ctx = Comparison.ctx;
@@ -81,6 +80,7 @@ if (Meteor.isClient) {
     ctx.fill();
   };
 
+  // Draw a bus icon at the specified location
   var drawBusIcon = function (x, y) {
     // TODO: Make this an actual bus icon
     var ctx = Comparison.ctx;
@@ -96,6 +96,7 @@ if (Meteor.isClient) {
     ctx.fill();
   };
 
+  // Draw a T icon at the specified location (this represents the MBTA subway system)
   var drawTIcon = function (x, y) {
     var ctx = Comparison.ctx;
     var radius = 10;
@@ -115,12 +116,12 @@ if (Meteor.isClient) {
     ctx.fill();
   };
 
+  /* For a given canvas context ctx,
+   * draw a rounded route line from xStart to xEnd, centered on yMid with a given thickness.
+   * Round the beginning of the line if startRounded is true.
+   * Round the end of the line if endRounded is true.
+  */
   var drawRouteLine = function (ctx, xStart, xEnd, yMid, thickness, startRounded, endRounded) {
-    /* For a given canvas context ctx,
-     * draw a rounded route line from xStart to xEnd, centered on yMid with a given thickness.
-     * Round the beginning of the line if startRounded is true.
-     * Round the end of the line if endRounded is true.
-    */
     ctx.beginPath();
     var radius = thickness/2;
     if (startRounded) {
@@ -138,6 +139,8 @@ if (Meteor.isClient) {
     ctx.fill();
   };
 
+  // Loops through every step of the passed in route in the Google Maps DirectionsRoute object
+  // See https://google-developers.appspot.com/maps/documentation/javascript/directions#DirectionsResults
   var plotSingleRoute = function (route, yMid) {
     var ctx = Comparison.ctx;
     var timeOffset = route.legs[0].departure_time.value;
@@ -174,6 +177,7 @@ if (Meteor.isClient) {
     }
   };
 
+  // Plot the time grid and times on the graphical comparison canvas
   var plotTimeIntervals = function () {
     var currIntervalTime = new Date(Comparison.initialTime);
     currIntervalTime.setMinutes(0);
@@ -212,6 +216,8 @@ if (Meteor.isClient) {
 
   };
 
+  // Uses Google Maps API to get directions between (currently hardcoded) locations.
+  // Plots them on the graphical comparison canvas
   var findRoutes = function () {
     var router = new google.maps.DirectionsService();
     // TODO: Currently hardcoded! Make it not so.
