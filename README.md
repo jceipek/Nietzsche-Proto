@@ -39,7 +39,10 @@ Required for minimum deliverable - M
    + Allow window resizing (M)
    + Add departure and arrival bubbles
    + Make resting seem less disconnected from everything
+   + Display current time
    + Finish icons
+   + Allow panning
+   + Allow dragging start time
 2. Make it work for arbitrary routes
    + Make the From and To fields work with the GO button (M)
    + Add an autocomplete list

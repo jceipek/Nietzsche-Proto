@@ -10,6 +10,11 @@ h2 {
   line-height: 1em;  
 }
 
+hgroup {
+  float: right;  
+  margin-bottom: 2em;
+}
+
 #container {
   margin: 1em;
 }
@@ -22,4 +27,8 @@ h2 {
 .time {
   position: absolute;
   white-space: nowrap;
+}
+
+#location-specifier {
+  padding-top: 2em;  
 }
