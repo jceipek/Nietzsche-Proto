@@ -21,3 +21,8 @@ hgroup {
 #container {
   margin: 1em;
 }
+
+.time {
+  position: absolute;
+  white-space: nowrap;
+}

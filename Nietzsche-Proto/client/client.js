@@ -3,14 +3,14 @@ if (Meteor.isClient) {
   // Session Variables:
   //
   // task // keeps track of what the user is doing (searching, comparison, or looking at directions)
-  
+
   // Global Objects:
   // comparison :
   //  {
   //    ctx
   //    initialTime
   //  }
-  
+
   var Comparison = {
     ctx: null,
     initialTime: null,
@@ -37,9 +37,84 @@ if (Meteor.isClient) {
   var posFromTime = function (time) {
     // Convert to seconds and scale by scalingFactor
     return (time - Comparison.initialTime)/1000 * Comparison.scalingFactor;
-  }; 
+  };
+
+  var formatTime = function (time) {
+    var amPM = 'AM';
+    if (hours >= 12) {
+      amPM = 'PM';
+    }
+    var hours = (time.getHours()%12);
+    if (hours === 0) {
+      hours = 12;
+    }
+    var minutes = time.getMinutes();
+    if (minutes === 0) {
+      minutes = '00';
+    }
+    return hours+':'+minutes+' '+amPM;
+  };
+
+  var addTime = function (time, x, y) {
+    e = document.createElement('div');
+    $(e).html(formatTime(time));
+    $(e).attr({
+      class: 'time'
+    });
+    $(e).css({
+      left: x,
+      top: y
+    });
+    $('canvas').after(e);
+  };
 
 // START DRAWING FUNCTIONS //
+
+  var drawWalkingIcon = function (x, y) {
+    // TODO: Make this an actual walking icon
+    var ctx = Comparison.ctx;
+    var radius = 10;
+    ctx.beginPath();
+    ctx.rect(x-radius, y-radius, radius*2, radius*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fill();
+  };
+
+  var drawBusIcon = function (x, y) {
+    // TODO: Make this an actual bus icon
+    var ctx = Comparison.ctx;
+    var radius = 10;
+    var innerRadius = 6;
+    var busColor = ctx.fillStyle;
+    ctx.beginPath();
+    ctx.rect(x-radius, y-radius, radius*2, radius*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = "white";
+    ctx.rect(x-innerRadius, y-innerRadius, innerRadius*2, innerRadius*2);
+    ctx.fill();
+  };
+
+  var drawTIcon = function (x, y) {
+    var ctx = Comparison.ctx;
+    var radius = 10;
+    var innerRadius = 6;
+    var thickness = 3;
+    ctx.beginPath();
+    ctx.fillStyle = "white";
+    ctx.arc(x, y, radius, -Math.PI, Math.PI, false);
+    ctx.fill();
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = thickness;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.fillStyle = "black";
+    ctx.rect(x-innerRadius, y-innerRadius*0.7, innerRadius*2, thickness);
+    ctx.rect(x-thickness/2, y-innerRadius*0.7, thickness, innerRadius*1.7);
+    ctx.fill();
+  };
+
   var drawRouteLine = function (ctx, xStart, xEnd, yMid, thickness, startRounded, endRounded) {
     /* For a given canvas context ctx,
      * draw a rounded route line from xStart to xEnd, centered on yMid with a given thickness.
@@ -71,38 +146,46 @@ if (Meteor.isClient) {
         if (steps[stepIdx].travel_mode === "TRANSIT") {
           ctx.fillStyle = steps[stepIdx].transit.line.color; // XXX: This is sometimes undefined (black)
           timeOffset = new Date(steps[stepIdx].transit.departure_time.value);
+
         } else {
-          ctx.fillStyle = "rgb(0,0,0)"; 
+          ctx.fillStyle = "rgb(0,0,0)";
         }
         var firstRounded = (stepIdx === 0);
         var lastRounded = (stepIdx === steps.length-1);
 
         var stepStart = posFromTime(timeOffset);
-        
+
         var stepEnd = new Date(timeOffset);
         stepEnd.setSeconds(stepEnd.getSeconds()+steps[stepIdx].duration.value);
         stepEnd = posFromTime(stepEnd);
-        
+
         drawRouteLine(ctx, stepStart, stepEnd, yMid, 10, firstRounded, lastRounded);
+        if (steps[stepIdx].travel_mode === "TRANSIT") {
+          var vehicleType = steps[stepIdx].transit.line.vehicle.type;
+          if (vehicleType === "SUBWAY") {
+            drawTIcon((stepStart + stepEnd)/2, yMid+20);
+          } else if (vehicleType === "BUS") {
+            drawBusIcon((stepStart + stepEnd)/2, yMid+20);
+          }
+        } else if (steps[stepIdx].travel_mode === "WALKING") {
+          drawWalkingIcon((stepStart + stepEnd)/2, yMid+20);
+        }
         timeOffset.setSeconds(timeOffset.getSeconds()+steps[stepIdx].duration.value);
     }
-    console.log(timeOffset);
   };
 
   var plotTimeIntervals = function () {
-    console.log("PLOT");
     var currIntervalTime = new Date(Comparison.initialTime);
     currIntervalTime.setMinutes(0);
     var ctx = Comparison.ctx;
     while (posFromTime(currIntervalTime) < document.width) {
-      currIntervalPos = posFromTime(currIntervalTime); 
+      currIntervalPos = posFromTime(currIntervalTime);
       var startY = 0;
       ctx.beginPath();
       if ((currIntervalTime.getMinutes() % 10) === 0) {
-        console.log("Black "+currIntervalPos);
+        addTime(currIntervalTime, currIntervalPos+$('#graphical-comparison')[0].offsetLeft+4, $('#graphical-comparison')[0].offsetTop)
         ctx.strokeStyle = "rgb(0, 0, 0)";
       } else if ((currIntervalTime.getMinutes() % 5) === 0) {
-        console.log("Grey "+currIntervalPos);
         ctx.strokeStyle = "rgb(200, 200, 200)";
         startY = 15;
       }
@@ -126,7 +209,7 @@ if (Meteor.isClient) {
       // TODO: Fallback mechanism
       console.log("canvas isn't supported");
     }
- 
+
   };
 
   var findRoutes = function () {
@@ -146,11 +229,11 @@ if (Meteor.isClient) {
       if (status == google.maps.DirectionsStatus.OK) {
         console.log(response);
         var horizontalRouteOffset = 70;
-        plotTimeIntervals();        
+        plotTimeIntervals();
         for (var routeIdx = 0; routeIdx < response.routes.length; routeIdx++) {
           plotSingleRoute(response.routes[routeIdx], (routeIdx + 1) * horizontalRouteOffset);
         }
-      }  
+      }
     });
   }
 
