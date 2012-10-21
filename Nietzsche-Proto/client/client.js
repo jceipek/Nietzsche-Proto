@@ -2,8 +2,22 @@ if (Meteor.isClient) {
 
   // Session Variables:
   //
-  // task: keeps track of what the user is doing (searching, comparison, or looking at directions)
-  //
+  // task // keeps track of what the user is doing (searching, comparison, or looking at directions)
+  
+  // Global Objects:
+  // comparison :
+  //  {
+  //    ctx
+  //    initialTime
+  //  }
+  
+  var Comparison = {
+    ctx: null,
+    initialTime: null,
+    scalingFactor: 0.2,
+    width: document.width,
+    height: document.height
+  };
 
   // Lets the templating system determine which templates to display
   Template.main.task = function (task) {
@@ -19,6 +33,11 @@ if (Meteor.isClient) {
     }
     */
   });
+
+  var posFromTime = function (time) {
+    // Convert to seconds and scale by scalingFactor
+    return (time - Comparison.initialTime)/1000 * Comparison.scalingFactor;
+  }; 
 
 // START DRAWING FUNCTIONS //
   var drawRouteLine = function (ctx, xStart, xEnd, yMid, thickness, startRounded, endRounded) {
@@ -45,25 +64,52 @@ if (Meteor.isClient) {
   };
 
   var plotSingleRoute = function (route, yMid) {
-    var canvas = $('#graphical-comparison')[0];
-    if (canvas.getContext) {
-      var ctx = canvas.getContext('2d');
+    var ctx = Comparison.ctx;
+    var timeOffset = route.legs[0].departure_time.value;
+    var steps = route.legs[0].steps;
+    for (var stepIdx = 0; stepIdx < steps.length; stepIdx++) {
+        if (steps[stepIdx].travel_mode === "TRANSIT") {
+          ctx.fillStyle = steps[stepIdx].transit.line.color; // XXX: This is sometimes undefined (black)
+          timeOffset = new Date(steps[stepIdx].transit.departure_time.value);
+        } else {
+          ctx.fillStyle = "rgb(0,0,0)"; 
+        }
+        var firstRounded = (stepIdx === 0);
+        var lastRounded = (stepIdx === steps.length-1);
 
-      var scaleFactor = .4;
-      var currOffset = 10;
-      var steps = route.legs[0].steps;
-      for (var stepIdx = 0; stepIdx < steps.length; stepIdx++) {
-          if (steps[stepIdx].travel_mode === "TRANSIT") {
-            ctx.fillStyle = steps[stepIdx].transit.line.color;
-          } else {
-            ctx.fillStyle = "rgb(0,0,0)"; 
-          }
-          var firstRounded = (stepIdx === 0);
-          var lastRounded = (stepIdx === steps.length-1);
-          var stepLength = steps[stepIdx].duration.value * scaleFactor;
-          drawRouteLine(ctx, currOffset, currOffset+stepLength, yMid, 10, firstRounded, lastRounded);
-          currOffset += stepLength + 10;
+        var stepStart = posFromTime(timeOffset);
+        
+        var stepEnd = new Date(timeOffset);
+        stepEnd.setSeconds(stepEnd.getSeconds()+steps[stepIdx].duration.value);
+        stepEnd = posFromTime(stepEnd);
+        
+        drawRouteLine(ctx, stepStart, stepEnd, yMid, 10, firstRounded, lastRounded);
+        timeOffset.setSeconds(timeOffset.getSeconds()+steps[stepIdx].duration.value);
+    }
+    console.log(timeOffset);
+  };
+
+  var plotTimeIntervals = function () {
+    console.log("PLOT");
+    var currIntervalTime = new Date(Comparison.initialTime);
+    currIntervalTime.setMinutes(0);
+    var ctx = Comparison.ctx;
+    while (posFromTime(currIntervalTime) < document.width) {
+      currIntervalPos = posFromTime(currIntervalTime); 
+      var startY = 0;
+      ctx.beginPath();
+      if ((currIntervalTime.getMinutes() % 10) === 0) {
+        console.log("Black "+currIntervalPos);
+        ctx.strokeStyle = "rgb(0, 0, 0)";
+      } else if ((currIntervalTime.getMinutes() % 5) === 0) {
+        console.log("Grey "+currIntervalPos);
+        ctx.strokeStyle = "rgb(200, 200, 200)";
+        startY = 15;
       }
+      ctx.moveTo(currIntervalPos, startY);
+      ctx.lineTo(currIntervalPos, document.height);
+      ctx.stroke();
+      currIntervalTime.setMinutes(currIntervalTime.getMinutes()+5);
     }
   }
 // END DRAWING FUNCTIONS //
@@ -74,6 +120,8 @@ if (Meteor.isClient) {
     canvas.height = document.height;
     if (canvas.getContext) {
       var ctx = canvas.getContext('2d');
+      Comparison.ctx = ctx;
+      Comparison.initialTime = new Date(1350757867064); // XXX: TODO: Change back to Date()
     } else {
       // TODO: Fallback mechanism
       console.log("canvas isn't supported");
@@ -85,19 +133,22 @@ if (Meteor.isClient) {
     var router = new google.maps.DirectionsService();
     // TODO: Currently hardcoded! Make it not so.
     var request = {
-      origin: "Hoboken NJ",
-      destination: "Carroll Gardens, Brooklyn",
+      origin: "Harvard Square, Boston, MA",
+      destination: "Boston Public Library",
       travelMode: google.maps.TravelMode.TRANSIT,
       transitOptions: {
-        departureTime: new Date()
+        departureTime: Comparison.initialTime
       },
+      provideRouteAlternatives: true,
       unitSystem: google.maps.UnitSystem.IMPERIAL
     };
     router.route(request, function (response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
         console.log(response);
-        if (response.routes.length > 0) {
-          plotSingleRoute(response.routes[0], 20);
+        var horizontalRouteOffset = 70;
+        plotTimeIntervals();        
+        for (var routeIdx = 0; routeIdx < response.routes.length; routeIdx++) {
+          plotSingleRoute(response.routes[routeIdx], (routeIdx + 1) * horizontalRouteOffset);
         }
       }  
     });
