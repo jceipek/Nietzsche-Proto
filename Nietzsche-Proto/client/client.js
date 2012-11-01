@@ -311,9 +311,9 @@ if (Meteor.isClient) {
 
         // TODO: Check if result already exists in mongo. If not, get the data.
         var document = {
-          departureTime: new Date(response.ub.transitOptions.departureTime),
-          origin: response.ub.origin,
-          destination: response.ub.destination,
+          departureTime: new Date(request.transitOptions.departureTime),
+          origin: request.origin,
+          destination: request.destination,
           routes: response.routes
         };
         // TODO: Set this somewhere else (like when the text fields change)
@@ -344,8 +344,8 @@ if (Meteor.isClient) {
 
     Session.set("origin", "Harvard Square, Boston, MA");
     Session.set("destination", "Boston Public Library");
-    findRoutes(redrawGraphicalComparison);
     Comparison.initialTime = new Date(); //new Date(1350757867064); // XXX: TODO: Change back to Date()
+    findRoutes(redrawGraphicalComparison);
 
     // Redraw the comparison canvas when window resizes.
     $(window).resize(function () {
